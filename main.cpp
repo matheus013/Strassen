@@ -95,56 +95,59 @@ struct Matrix {
         return result;
     }
 
-    Matrix<T> strassen(Matrix<T> a, Matrix<T> b) {
-        if (a.row <= 1 || a.column <= 1 || b.row <= 1 || b.column <= 1)
-            return a * b;
 
-        Matrix<T> result = Matrix(a.row, b.column);
-        Matrix<T> a11(a.row / 2, a.column / 2), a12(a.row / 2, a.column / 2),
-                a21(a.row / 2, a.column / 2), a22(a.row / 2, a.column / 2);
-        Matrix<T> b11(b.row / 2, b.column / 2), b12(b.row / 2, b.column / 2),
-                b21(b.row / 2, b.column / 2), b22(b.row / 2, b.column / 2);
-
-        int la = a.row / 2, ca = a.column / 2;
-        int lb = b.row / 2, cb = b.column / 2;
-        for (int i = 0; i < la; ++i)
-            for (int j = 0; j < ca; ++j) {
-                a11.set(i, j, a[i][j]);
-                a12.set(i, j, a[i][j + ca]);
-                a21.set(i, j, a[i + la][j]);
-                a22.set(i, j, a[i + la][j + ca]);
-            }
-        for (int i = 0; i < lb; ++i)
-            for (int j = 0; j < cb; ++j) {
-                b11.set(i, j, b[i][j]);
-                b12.set(i, j, b[i][j + cb]);
-                b21.set(i, j, b[i + lb][j]);
-                b22.set(i, j, b[i + lb][j + cb]);
-            }
-        Matrix<T> m1 = strassen(a11 + a22, b11 + b22);
-        Matrix<T> m2 = strassen(a21 + a22, b11);
-        Matrix<T> m3 = strassen(a11, b12 - b22);
-        Matrix<T> m4 = strassen(a22, b21 - b11);
-        Matrix<T> m5 = strassen(a11 + a12, b22);
-        Matrix<T> m6 = strassen(a21 - a11, b11 + b12);
-        Matrix<T> m7 = strassen(a12 - a22, b21 + b22);
-
-        Matrix<T> c11 = m1 + m4 - m5 + m7;
-        Matrix<T> c12 = m3 + m5;
-        Matrix<T> c21 = m2 + m4;
-        Matrix<T> c22 = m1 + m2 - m3 - m6;
-
-        for (int i = 0; i < la; ++i)
-            for (int j = 0; j < cb; ++j) {
-                result.set(i, j, c11[i][j]);
-                result.set(i + la, j, c21[i][j]);
-                result.set(i, j + cb, c12[i][j]);
-                result.set(i + la, j + cb, c22[i][j]);
-
-            }
-        return result;
-    }
 };
+
+template<typename T>
+Matrix<T> strassen(Matrix<T> a, Matrix<T> b) {
+    if (a.row <= 1 || a.column <= 1 || b.row <= 1 || b.column <= 1)
+        return a * b;
+
+    Matrix<T> result(a.row, b.column);
+    Matrix<T> a11(a.row / 2, a.column / 2), a12(a.row / 2, a.column / 2),
+            a21(a.row / 2, a.column / 2), a22(a.row / 2, a.column / 2);
+    Matrix<T> b11(b.row / 2, b.column / 2), b12(b.row / 2, b.column / 2),
+            b21(b.row / 2, b.column / 2), b22(b.row / 2, b.column / 2);
+
+    int la = a.row / 2, ca = a.column / 2;
+    int lb = b.row / 2, cb = b.column / 2;
+    for (int i = 0; i < la; ++i)
+        for (int j = 0; j < ca; ++j) {
+            a11.set(i, j, a[i][j]);
+            a12.set(i, j, a[i][j + ca]);
+            a21.set(i, j, a[i + la][j]);
+            a22.set(i, j, a[i + la][j + ca]);
+        }
+    for (int i = 0; i < lb; ++i)
+        for (int j = 0; j < cb; ++j) {
+            b11.set(i, j, b[i][j]);
+            b12.set(i, j, b[i][j + cb]);
+            b21.set(i, j, b[i + lb][j]);
+            b22.set(i, j, b[i + lb][j + cb]);
+        }
+    Matrix<T> m1 = strassen<T>(a11 + a22, b11 + b22);
+    Matrix<T> m2 = strassen<T>(a21 + a22, b11);
+    Matrix<T> m3 = strassen<T>(a11, b12 - b22);
+    Matrix<T> m4 = strassen<T>(a22, b21 - b11);
+    Matrix<T> m5 = strassen<T>(a11 + a12, b22);
+    Matrix<T> m6 = strassen<T>(a21 - a11, b11 + b12);
+    Matrix<T> m7 = strassen<T>(a12 - a22, b21 + b22);
+
+    Matrix<T> c11 = m1 + m4 - m5 + m7;
+    Matrix<T> c12 = m3 + m5;
+    Matrix<T> c21 = m2 + m4;
+    Matrix<T> c22 = m1 - m2 + m3 + m6;
+
+    for (int i = 0; i < la; ++i)
+        for (int j = 0; j < cb; ++j) {
+            result.set(i, j, c11[i][j]);
+            result.set(i + la, j, c21[i][j]);
+            result.set(i, j + cb, c12[i][j]);
+            result.set(i + la, j + cb, c22[i][j]);
+
+        }
+    return result;
+}
 
 template<typename N>
 Matrix<N> randomMT(int row, int col, int max = 1000) {
@@ -158,17 +161,33 @@ Matrix<N> randomMT(int row, int col, int max = 1000) {
     return result;
 }
 
+template<typename T>
+Matrix<T> exp(Matrix<T> &a, int n) {
+    if (n == 1)
+        return a;
+    Matrix<T> r = strassen<T>(a, a);
+    if (n == 2) return r;
+    for (int i = 1; i < n - 1; ++i) {
+        r = strassen<T>(r, a);
+    }
+    return r;
+}
+
 
 int main() {
 
-    Matrix<double> a, b;
+    int e, n;
+    scanf("%d %d", &n, &e);
+    Matrix<double> a(n, n);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            scanf("%lf", &a.model[j][i]);
+        }
+    }
 
-    a = randomMT<double>(2, 2);
-    cout << "mtz base\n";
-    a.print();
-    cout << "mtz muilt normal\n";
-    (a * a).print();
-    cout << "mtz multi stra\n";
-    b.strassen(a, a).print();
+    Matrix<double> b = exp<double>(a, e);
+
+    b.print();
+
     return 0;
 }
